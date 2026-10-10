@@ -9,6 +9,7 @@ import CtaSection from './component/CtaSection';
 import ShapePage from './shapePage/shapepage';
 import ShapePageDetail from './shapePage/shapepagedetail';
 import AboutPage from './pages/AboutPage';
+import RumusPage from './pages/RumusPage';
 
 // Komponen Beranda (Home)
 const Home = () => (
@@ -34,6 +35,7 @@ function App() {
               {/* Route Utama */}
               <Route path="/" element={<Home />} />
               <Route path="/tentang" element={<AboutPage />} />
+              <Route path="/rumus" element={<RumusPage />} />
               <Route path="/kategori" element={<div className="pt-8"><CategoriesSection /></div>} />
               
               {/* Route Sub-Kategori */}
