@@ -122,6 +122,22 @@ const Navbar = () => {
             );
           })}
         </div>
+
+        {/* Lab / Playground Shortcut */}
+        <div className="p-4 border-t border-gray-100">
+          <Link
+            to="/playground/mafs"
+            className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 hover:bg-indigo-50 border border-slate-200/60 hover:border-indigo-200 transition-all group"
+          >
+            <div>
+              <div className="text-xs font-bold text-slate-800 group-hover:text-indigo-600">Mafs Sandbox</div>
+              <div className="text-[10px] text-slate-400">Lab eksperimen grafik</div>
+            </div>
+            <span className="text-xs font-mono bg-white px-2 py-0.5 rounded-lg border border-slate-200 text-slate-500 group-hover:text-indigo-600">
+              Lab
+            </span>
+          </Link>
+        </div>
       </aside>
     </>
   );

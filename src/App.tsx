@@ -8,8 +8,11 @@ import PopularFormulasSection from './component/PopularFormulasSection';
 import CtaSection from './component/CtaSection';
 import ShapePage from './shapePage/shapepage';
 import ShapePageDetail from './shapePage/shapepagedetail';
+import AljabarPage from './aljabarPage/aljabarpage';
+import AljabarPageDetail from './aljabarPage/aljabarpagedetail';
 import AboutPage from './pages/AboutPage';
 import RumusPage from './pages/RumusPage';
+import MafsPlayground from './pages/MafsPlayground';
 
 // Komponen Beranda (Home)
 const Home = () => (
@@ -36,19 +39,16 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/tentang" element={<AboutPage />} />
               <Route path="/rumus" element={<RumusPage />} />
+              <Route path="/playground/mafs" element={<MafsPlayground />} />
               <Route path="/kategori" element={<div className="pt-8"><CategoriesSection /></div>} />
               
               {/* Route Sub-Kategori */}
               <Route path="/kategori/geometri" element={<ShapePage />} />
-              <Route path="/kategori/aljabar" element={
-                <div className="py-20 text-center">
-                  <h2 className="text-2xl font-bold text-slate-800">Kalkulator Aljabar</h2>
-                  <p className="text-slate-500 mt-2">Halaman Aljabar sedang dikembangkan.</p>
-                </div>
-              } />
+              <Route path="/kategori/aljabar" element={<AljabarPage />} />
 
               {/* Route Detail Kalkulator */}
               <Route path="/shape/:shapeId" element={<ShapePageDetail />} />
+              <Route path="/aljabar/:aljabarId" element={<AljabarPageDetail />} />
 
               {/* Fallback 404 Route */}
               <Route path="*" element={
