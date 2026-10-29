@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Mafs, Coordinates, Plot, Point, Text } from 'mafs';
+import { Mafs, Coordinates, Plot, Point, Line, Text } from 'mafs';
 import { 
   ArrowLeft, 
   Activity, 
@@ -15,6 +15,7 @@ import {
 import { aljabarList } from '../data/aljabar';
 import { HitungPersamaanKuadrat } from '../logic/aljabar/kuadrat';
 import { HitungPersamaanGarisLurus } from '../logic/aljabar/garislurus';
+import { hitungSpldv } from '../logic/aljabar/spldv';
 
 // Mapping Icon
 const iconMap: Record<string, React.ElementType> = {
@@ -25,6 +26,7 @@ const iconMap: Record<string, React.ElementType> = {
 
 type HasilKuadrat = ReturnType<typeof HitungPersamaanKuadrat>;
 type HasilGarisLurus = ReturnType<typeof HitungPersamaanGarisLurus>;
+type HasilSpldv = ReturnType<typeof hitungSpldv>;
 
 const AljabarPageDetail: React.FC = () => {
   const { aljabarId } = useParams<{ aljabarId: string }>();
@@ -47,6 +49,16 @@ const AljabarPageDetail: React.FC = () => {
   const [resultGarisLurus, setResultGarisLurus] = useState<HasilGarisLurus | null>(null);
   const [errorGarisLurus, setErrorGarisLurus] = useState<string | null>(null);
 
+  // --- State Input untuk SPLDV (a1, b1, c1, a2, b2, c2) ---
+  const [inputA1, setInputA1] = useState('');
+  const [inputB1, setInputB1] = useState('');
+  const [inputC1, setInputC1] = useState('');
+  const [inputA2, setInputA2] = useState('');
+  const [inputB2, setInputB2] = useState('');
+  const [inputC2, setInputC2] = useState('');
+  const [resultSpldv, setResultSpldv] = useState<HasilSpldv | null>(null);
+  const [errorSpldv, setErrorSpldv] = useState<string | null>(null);
+
   // Jika materi tidak ditemukan di data
   if (!topic) {
     return (
@@ -62,7 +74,7 @@ const AljabarPageDetail: React.FC = () => {
     );
   }
 
-  // Jika materi belum tersedia (status Segera Hadir)
+  // Jika materi belum tersedia
   if (!topic.isAvailable) {
     return (
       <div className="py-20 text-center max-w-md mx-auto">
@@ -141,6 +153,38 @@ const AljabarPageDetail: React.FC = () => {
     }
   };
 
+  // --- Handler Perhitungan SPLDV ---
+  const handleCalculateSpldv = () => {
+    setErrorSpldv(null);
+    setResultSpldv(null);
+
+    const a1 = parseFloat(inputA1);
+    const b1 = parseFloat(inputB1);
+    const c1 = parseFloat(inputC1);
+    const a2 = parseFloat(inputA2);
+    const b2 = parseFloat(inputB2);
+    const c2 = parseFloat(inputC2);
+
+    if ([a1, b1, c1, a2, b2, c2].some(isNaN)) {
+      setErrorSpldv('Semua koefisien (a1, b1, c1, a2, b2, c2) harus diisi angka.');
+      return;
+    }
+
+    try {
+      const res = hitungSpldv(a1, b1, c1, a2, b2, c2);
+      if (res.error) {
+        setErrorSpldv(res.error);
+      }
+      setResultSpldv(res);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setErrorSpldv(err.message);
+      } else {
+        setErrorSpldv('Terjadi kesalahan saat menghitung SPLDV.');
+      }
+    }
+  };
+
   return (
     <div className="min-h-screen py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
       {/* Tombol Back */}
@@ -171,7 +215,6 @@ const AljabarPageDetail: React.FC = () => {
       {topic.id === 'persamaan-kuadrat' && (
         <>
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 mb-10">
-            {/* Kolom Kiri: Penjelasan Materi Singkat */}
             <div className="lg:col-span-7 space-y-8">
               <div className="bg-white rounded-3xl p-8 border border-slate-200/60 shadow-sm">
                 <h3 className="text-lg font-bold text-slate-900 mb-3 flex items-center gap-2">
@@ -203,7 +246,6 @@ const AljabarPageDetail: React.FC = () => {
               </div>
             </div>
 
-            {/* Kolom Kanan: Form Kalkulator */}
             <div className="lg:col-span-5">
               <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-xl shadow-slate-200/50 sticky top-24">
                 <div className="flex items-center gap-3 mb-6 pb-6 border-b border-slate-100">
@@ -303,7 +345,6 @@ const AljabarPageDetail: React.FC = () => {
       {topic.id === 'persamaan-garis-lurus' && (
         <>
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 mb-10">
-            {/* Kolom Kiri: Penjelasan Materi */}
             <div className="lg:col-span-7 space-y-8">
               <div className="bg-white rounded-3xl p-8 border border-slate-200/60 shadow-sm">
                 <h3 className="text-lg font-bold text-slate-900 mb-3 flex items-center gap-2">
@@ -335,7 +376,6 @@ const AljabarPageDetail: React.FC = () => {
               </div>
             </div>
 
-            {/* Kolom Kanan: Form Kalkulator */}
             <div className="lg:col-span-5">
               <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-xl shadow-slate-200/50 sticky top-24">
                 <div className="flex items-center gap-3 mb-6 pb-6 border-b border-slate-100">
@@ -374,7 +414,6 @@ const AljabarPageDetail: React.FC = () => {
 
           {resultGarisLurus && (
             <div className="space-y-10">
-              {/* Kanvas Grafik Mafs Garis Lurus */}
               <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-2">
                   <div>
@@ -400,7 +439,6 @@ const AljabarPageDetail: React.FC = () => {
                 </div>
               </div>
 
-              {/* 4 Cards Ringkasan */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 <HasilCard label="Persamaan Garis" value={resultGarisLurus.persamaanStr} />
                 <HasilCard label={`Nilai y pada x=${inputX}`} value={resultGarisLurus.y.toString()} />
@@ -411,7 +449,6 @@ const AljabarPageDetail: React.FC = () => {
                 />
               </div>
 
-              {/* Langkah Penyelesaian */}
               <div className="bg-white rounded-3xl p-8 border border-emerald-200/60 shadow-sm relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-1.5 h-full bg-emerald-500"></div>
                 <h3 className="text-lg font-bold text-emerald-900 mb-5 flex items-center gap-2">
@@ -420,6 +457,170 @@ const AljabarPageDetail: React.FC = () => {
                 </h3>
                 <div className="space-y-3">
                   {resultGarisLurus.penyelesaian.map((langkah, index) => (
+                    <div
+                      key={index}
+                      className="bg-slate-50 rounded-2xl p-4 border border-slate-100 font-mono text-sm text-slate-700"
+                    >
+                      {langkah}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* ========================================================
+          3. MATERI: SPLDV (SISTEM PERSAMAAN LINEAR DUA VARIABEL)
+          ======================================================== */}
+      {topic.id === 'spldv' && (
+        <>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 mb-10">
+            {/* Kolom Kiri: Penjelasan Materi */}
+            <div className="lg:col-span-7 space-y-8">
+              <div className="bg-white rounded-3xl p-8 border border-slate-200/60 shadow-sm">
+                <h3 className="text-lg font-bold text-slate-900 mb-3 flex items-center gap-2">
+                  <BookOpen className="w-5 h-5 text-indigo-600" />
+                  Konsep Dasar SPLDV
+                </h3>
+                <p className="text-slate-600 leading-relaxed mb-4">
+                  {topic.description} Solusi titik potong (x, y) diperoleh menggunakan metode determinan (Aturan Cramer) yang akurat.
+                </p>
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-2 font-mono text-sm font-bold text-indigo-700">
+                  <div>(1) &nbsp; a₁x + b₁y = c₁</div>
+                  <div>(2) &nbsp; a₂x + b₂y = c₂</div>
+                </div>
+              </div>
+
+              <div className="bg-gradient-to-br from-indigo-50 to-blue-50 rounded-3xl p-8 border border-indigo-100">
+                <h3 className="text-lg font-bold text-indigo-900 mb-5 flex items-center gap-2">
+                  <Info className="w-5 h-5 text-indigo-600" />
+                  Rumus Aturan Cramer (Determinan)
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <RumusCard label="Determinan Utama (D)" rumus="D = a₁b₂ - b₁a₂" />
+                  <RumusCard label="Determinan X (Dx)" rumus="Dx = c₁b₂ - b₁c₂" />
+                  <RumusCard label="Determinan Y (Dy)" rumus="Dy = a₁c₂ - c₁a₂" />
+                  <RumusCard label="Solusi (x, y)" rumus="x = Dx/D,  y = Dy/D" />
+                </div>
+              </div>
+            </div>
+
+            {/* Kolom Kanan: Form Kalkulator Dua Persamaan */}
+            <div className="lg:col-span-5">
+              <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-xl shadow-slate-200/50 sticky top-24">
+                <div className="flex items-center gap-3 mb-6 pb-6 border-b border-slate-100">
+                  <div className="bg-indigo-600 p-2 rounded-lg text-white">
+                    <Calculator className="w-5 h-5" />
+                  </div>
+                  <h2 className="text-xl font-bold text-slate-900">Kalkulator SPLDV</h2>
+                </div>
+
+                {/* Box Persamaan 1 */}
+                <div className="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100/70 mb-4">
+                  <div className="text-xs font-bold text-indigo-700 uppercase tracking-wider mb-2">Persamaan 1</div>
+                  <div className="font-mono text-sm font-semibold text-slate-700 mb-3">
+                    <span className="text-indigo-600">{inputA1 || 'a₁'}</span>x + <span className="text-indigo-600">{inputB1 || 'b₁'}</span>y = <span className="text-indigo-600">{inputC1 || 'c₁'}</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <InputField label="a₁" value={inputA1} onChange={setInputA1} placeholder="Contoh: 2" />
+                    <InputField label="b₁" value={inputB1} onChange={setInputB1} placeholder="Contoh: 1" />
+                    <InputField label="c₁" value={inputC1} onChange={setInputC1} placeholder="Contoh: 5" />
+                  </div>
+                </div>
+
+                {/* Box Persamaan 2 */}
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/70 mb-6">
+                  <div className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Persamaan 2</div>
+                  <div className="font-mono text-sm font-semibold text-slate-700 mb-3">
+                    <span className="text-indigo-600">{inputA2 || 'a₂'}</span>x + <span className="text-indigo-600">{inputB2 || 'b₂'}</span>y = <span className="text-indigo-600">{inputC2 || 'c₂'}</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <InputField label="a₂" value={inputA2} onChange={setInputA2} placeholder="Contoh: 1" />
+                    <InputField label="b₂" value={inputB2} onChange={setInputB2} placeholder="Contoh: -1" />
+                    <InputField label="c₂" value={inputC2} onChange={setInputC2} placeholder="Contoh: 1" />
+                  </div>
+                </div>
+
+                {errorSpldv && (
+                  <div className="bg-red-50 text-red-600 text-sm font-medium p-3 rounded-xl mb-4 border border-red-200">
+                    ⚠️ {errorSpldv}
+                  </div>
+                )}
+
+                <button
+                  onClick={handleCalculateSpldv}
+                  className="w-full bg-indigo-600 text-white font-bold py-4 rounded-xl hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-200 transition-all active:scale-[0.98]"
+                >
+                  Hitung & Visualisasikan
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {resultSpldv && (
+            <div className="space-y-10">
+              {/* Kanvas Grafik Mafs Dua Garis */}
+              <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-2">
+                  <div>
+                    <h3 className="text-xl font-bold text-slate-900">Visualisasi Dua Garis Tabrakan</h3>
+                    <p className="text-sm text-slate-500 mt-1">
+                      Kedua garis digambar di koordinat kartesius. Titik temu keduanya adalah solusi nilai (x, y).
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3 text-xs font-mono">
+                    <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-indigo-600"></span> Garis 1</span>
+                    <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-rose-500"></span> Garis 2</span>
+                    {resultSpldv.x !== null && resultSpldv.y !== null && (
+                      <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Titik Potong (x, y)</span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="w-full rounded-2xl overflow-hidden border border-slate-100 bg-slate-900/5">
+                  <GrafikSPLDV
+                    a1={parseFloat(inputA1)}
+                    b1={parseFloat(inputB1)}
+                    c1={parseFloat(inputC1)}
+                    a2={parseFloat(inputA2)}
+                    b2={parseFloat(inputB2)}
+                    c2={parseFloat(inputC2)}
+                    result={resultSpldv}
+                  />
+                </div>
+              </div>
+
+              {/* 4 Cards Ringkasan */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <HasilCard 
+                  label="Nilai x" 
+                  value={resultSpldv.x !== null ? fmt(resultSpldv.x) : 'Tidak ada'} 
+                />
+                <HasilCard 
+                  label="Nilai y" 
+                  value={resultSpldv.y !== null ? fmt(resultSpldv.y) : 'Tidak ada'} 
+                />
+                <HasilCard 
+                  label="Determinan Utama (D)" 
+                  value={resultSpldv.determinanutama.toString()} 
+                />
+                <HasilCard 
+                  label="Status Solusi" 
+                  value={resultSpldv.error ? 'Sejajar/Berimpit' : 'Solusi Tunggal'} 
+                />
+              </div>
+
+              {/* Langkah Penyelesaian */}
+              <div className="bg-white rounded-3xl p-8 border border-emerald-200/60 shadow-sm relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-1.5 h-full bg-emerald-500"></div>
+                <h3 className="text-lg font-bold text-emerald-900 mb-5 flex items-center gap-2">
+                  <Play className="w-5 h-5 text-emerald-600 fill-emerald-600" />
+                  Langkah Penyelesaian (Metode Determinan)
+                </h3>
+                <div className="space-y-3">
+                  {resultSpldv.penyelesaian.map((langkah, index) => (
                     <div
                       key={index}
                       className="bg-slate-50 rounded-2xl p-4 border border-slate-100 font-mono text-sm text-slate-700"
@@ -531,31 +732,105 @@ const GrafikGarisLurus: React.FC<{
     >
       <Coordinates.Cartesian />
 
-      {/* Garis Lurus: y = mx + c */}
       <Plot.OfX
         y={(val) => m * val + c}
         color="#6366f1"
         weight={3}
       />
 
-      {/* Titik Hasil yang Diuji (x, y) */}
       <Point x={x} y={y} color="#4f46e5" />
       <Text x={x} y={y + 0.8} size={13} color="#4f46e5">
         ({fmt(x)}, {fmt(y)})
       </Text>
 
-      {/* Titik Potong Sumbu Y (0, c) */}
       <Point x={0} y={c} color="#3b82f6" />
       <Text x={0.8} y={c} size={13} color="#3b82f6">
         Potong Y (0, {c})
       </Text>
 
-      {/* Titik Potong Sumbu X (-c/m, 0) */}
       {result.titikPotongX && (
         <>
           <Point x={result.titikPotongX.x} y={0} color="#10b981" />
           <Text x={result.titikPotongX.x} y={-0.8} size={13} color="#10b981">
             Potong X ({fmt(result.titikPotongX.x)}, 0)
+          </Text>
+        </>
+      )}
+    </Mafs>
+  );
+};
+
+// ========================================================
+// KOMPONEN GRAFIK: SPLDV (DUA GARIS TABRAKAN)
+// ========================================================
+const GrafikSPLDV: React.FC<{
+  a1: number;
+  b1: number;
+  c1: number;
+  a2: number;
+  b2: number;
+  c2: number;
+  result: HasilSpldv;
+}> = ({ a1, b1, c1, a2, b2, c2, result }) => {
+  const xCenter = result.x !== null ? result.x : 0;
+  const yCenter = result.y !== null ? result.y : 0;
+  const range = Math.max(8, Math.abs(xCenter) + 6, Math.abs(yCenter) + 6);
+
+  return (
+    <Mafs
+      width="auto"
+      height={600}
+      viewBox={{
+        x: [xCenter - range, xCenter + range],
+        y: [yCenter - range, yCenter + range],
+      }}
+      zoom
+    >
+      <Coordinates.Cartesian />
+
+      {/* Garis 1 (Indigo): a1*x + b1*y = c1 => y = (c1 - a1*x) / b1 */}
+      {b1 !== 0 ? (
+        <Plot.OfX
+          y={(x) => (c1 - a1 * x) / b1}
+          color="#4f46e5"
+          weight={3}
+        />
+      ) : (
+        <Line.Segment
+          point1={[c1 / a1, -100]}
+          point2={[c1 / a1, 100]}
+          color="#4f46e5"
+          weight={3}
+        />
+      )}
+
+      {/* Garis 2 (Rose): a2*x + b2*y = c2 => y = (c2 - a2*x) / b2 */}
+      {b2 !== 0 ? (
+        <Plot.OfX
+          y={(x) => (c2 - a2 * x) / b2}
+          color="#f43f5e"
+          weight={3}
+        />
+      ) : (
+        <Line.Segment
+          point1={[c2 / a2, -100]}
+          point2={[c2 / a2, 100]}
+          color="#f43f5e"
+          weight={3}
+        />
+      )}
+
+      {/* Titik Potong / Solusi Tunggal (Emerald Green) */}
+      {result.x !== null && result.y !== null && (
+        <>
+          <Point x={result.x} y={result.y} color="#10b981" />
+          <Text
+            x={result.x}
+            y={result.y + 0.8}
+            size={13}
+            color="#10b981"
+          >
+            Titik Potong ({fmt(result.x)}, {fmt(result.y)})
           </Text>
         </>
       )}

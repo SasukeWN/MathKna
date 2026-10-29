@@ -10,6 +10,8 @@ import ShapePage from './shapePage/shapepage';
 import ShapePageDetail from './shapePage/shapepagedetail';
 import AljabarPage from './aljabarPage/aljabarpage';
 import AljabarPageDetail from './aljabarPage/aljabarpagedetail';
+import TurunanPage from './turunanPage/turunanpage';
+import TurunanPageDetail from './turunanPage/turunanpagedetail';
 import AboutPage from './pages/AboutPage';
 import RumusPage from './pages/RumusPage';
 import MafsPlayground from './pages/MafsPlayground';
@@ -29,7 +31,7 @@ function App() {
   return (
     <Router>
       <div className="min-h-screen bg-slate-50 flex flex-col overflow-x-hidden">
-        <Navbar />
+       
 
         {/* Wrapper Konten: md:pl-64 untuk memberi ruang pada sidebar di desktop */}
         <div className="md:pl-64 flex-1 flex flex-col">
@@ -45,10 +47,13 @@ function App() {
               {/* Route Sub-Kategori */}
               <Route path="/kategori/geometri" element={<ShapePage />} />
               <Route path="/kategori/aljabar" element={<AljabarPage />} />
+              <Route path="/kategori/kalkulus" element={<TurunanPage />} />
+              <Route path="/kategori/turunan" element={<TurunanPage />} />
 
               {/* Route Detail Kalkulator */}
               <Route path="/shape/:shapeId" element={<ShapePageDetail />} />
               <Route path="/aljabar/:aljabarId" element={<AljabarPageDetail />} />
+              <Route path="/turunan/:turunanId" element={<TurunanPageDetail />} />
 
               {/* Fallback 404 Route */}
               <Route path="*" element={
