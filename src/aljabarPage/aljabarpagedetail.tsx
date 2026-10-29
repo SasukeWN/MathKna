@@ -14,6 +14,7 @@ import {
 
 import { aljabarList } from '../data/aljabar';
 import { HitungPersamaanKuadrat } from '../logic/aljabar/kuadrat';
+import { HitungPersamaanGarisLurus } from '../logic/aljabar/garislurus';
 
 // Mapping Icon
 const iconMap: Record<string, React.ElementType> = {
@@ -23,6 +24,7 @@ const iconMap: Record<string, React.ElementType> = {
 };
 
 type HasilKuadrat = ReturnType<typeof HitungPersamaanKuadrat>;
+type HasilGarisLurus = ReturnType<typeof HitungPersamaanGarisLurus>;
 
 const AljabarPageDetail: React.FC = () => {
   const { aljabarId } = useParams<{ aljabarId: string }>();
@@ -31,14 +33,19 @@ const AljabarPageDetail: React.FC = () => {
   // Cari data materi berdasarkan ID di URL
   const topic = aljabarList.find((item) => item.id === aljabarId);
 
-  // State Input untuk Persamaan Kuadrat (a, b, c)
+  // --- State Input untuk Persamaan Kuadrat (a, b, c) ---
   const [inputA, setInputA] = useState('');
   const [inputB, setInputB] = useState('');
   const [inputC, setInputC] = useState('');
+  const [resultKuadrat, setResultKuadrat] = useState<HasilKuadrat | null>(null);
+  const [errorKuadrat, setErrorKuadrat] = useState<string | null>(null);
 
-  // State Hasil & Error
-  const [result, setResult] = useState<HasilKuadrat | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  // --- State Input untuk Persamaan Garis Lurus (m, x, c) ---
+  const [inputM, setInputM] = useState('');
+  const [inputX, setInputX] = useState('');
+  const [inputConstC, setInputConstC] = useState('');
+  const [resultGarisLurus, setResultGarisLurus] = useState<HasilGarisLurus | null>(null);
+  const [errorGarisLurus, setErrorGarisLurus] = useState<string | null>(null);
 
   // Jika materi tidak ditemukan di data
   if (!topic) {
@@ -77,33 +84,59 @@ const AljabarPageDetail: React.FC = () => {
 
   const Icon = iconMap[topic.iconName] || Activity;
 
-  // Handler Perhitungan Persamaan Kuadrat
+  // --- Handler Perhitungan Persamaan Kuadrat ---
   const handleCalculateKuadrat = () => {
-    setError(null);
-    setResult(null);
+    setErrorKuadrat(null);
+    setResultKuadrat(null);
 
     const a = parseFloat(inputA);
     const b = parseFloat(inputB);
     const c = parseFloat(inputC);
 
     if (isNaN(a) || isNaN(b) || isNaN(c)) {
-      setError('Semua kolom (a, b, c) harus diisi dengan angka.');
+      setErrorKuadrat('Semua kolom (a, b, c) harus diisi dengan angka.');
       return;
     }
 
     if (a === 0) {
-      setError('Nilai "a" tidak boleh 0 pada persamaan kuadrat.');
+      setErrorKuadrat('Nilai "a" tidak boleh 0 pada persamaan kuadrat.');
       return;
     }
 
     try {
       const res = HitungPersamaanKuadrat(a, b, c);
-      setResult(res);
+      setResultKuadrat(res);
     } catch (err: unknown) {
       if (err instanceof Error) {
-        setError(err.message);
+        setErrorKuadrat(err.message);
       } else {
-        setError('Terjadi kesalahan saat menghitung.');
+        setErrorKuadrat('Terjadi kesalahan saat menghitung.');
+      }
+    }
+  };
+
+  // --- Handler Perhitungan Persamaan Garis Lurus ---
+  const handleCalculateGarisLurus = () => {
+    setErrorGarisLurus(null);
+    setResultGarisLurus(null);
+
+    const m = parseFloat(inputM);
+    const x = parseFloat(inputX);
+    const c = parseFloat(inputConstC);
+
+    if (isNaN(m) || isNaN(x) || isNaN(c)) {
+      setErrorGarisLurus('Semua kolom (m, x, c) harus diisi dengan angka.');
+      return;
+    }
+
+    try {
+      const res = HitungPersamaanGarisLurus(m, x, c);
+      setResultGarisLurus(res);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setErrorGarisLurus(err.message);
+      } else {
+        setErrorGarisLurus('Terjadi kesalahan saat menghitung.');
       }
     }
   };
@@ -132,14 +165,14 @@ const AljabarPageDetail: React.FC = () => {
         </div>
       </div>
 
-      {/* TAMPILAN MATERI: PERSAMAAN KUADRAT */}
+      {/* ========================================================
+          1. MATERI: PERSAMAAN KUADRAT
+          ======================================================== */}
       {topic.id === 'persamaan-kuadrat' && (
         <>
-          {/* Main Grid: Materi & Form Input */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 mb-10">
             {/* Kolom Kiri: Penjelasan Materi Singkat */}
             <div className="lg:col-span-7 space-y-8">
-              {/* Card Definisi */}
               <div className="bg-white rounded-3xl p-8 border border-slate-200/60 shadow-sm">
                 <h3 className="text-lg font-bold text-slate-900 mb-3 flex items-center gap-2">
                   <BookOpen className="w-5 h-5 text-indigo-600" />
@@ -156,7 +189,6 @@ const AljabarPageDetail: React.FC = () => {
                 </div>
               </div>
 
-              {/* Card Rumus Kunci */}
               <div className="bg-gradient-to-br from-indigo-50 to-blue-50 rounded-3xl p-8 border border-indigo-100">
                 <h3 className="text-lg font-bold text-indigo-900 mb-5 flex items-center gap-2">
                   <Info className="w-5 h-5 text-indigo-600" />
@@ -181,23 +213,21 @@ const AljabarPageDetail: React.FC = () => {
                   <h2 className="text-xl font-bold text-slate-900">Kalkulator {topic.name}</h2>
                 </div>
 
-                {/* Preview Persamaan Dinamis */}
                 <div className="bg-slate-50 rounded-2xl p-4 mb-6 text-center border border-slate-100 font-mono text-base sm:text-lg font-bold text-slate-800">
                   <span className="text-indigo-600">{inputA || 'a'}</span>x² +{' '}
                   <span className="text-indigo-600">{inputB || 'b'}</span>x +{' '}
                   <span className="text-indigo-600">{inputC || 'c'}</span> = 0
                 </div>
 
-                {/* Form Inputs */}
                 <div className="space-y-4 mb-6">
                   <InputField label="Nilai a (koefisien x²)" value={inputA} onChange={setInputA} placeholder="Contoh: 1" />
                   <InputField label="Nilai b (koefisien x)" value={inputB} onChange={setInputB} placeholder="Contoh: -2" />
                   <InputField label="Nilai c (konstanta)" value={inputC} onChange={setInputC} placeholder="Contoh: -8" />
                 </div>
 
-                {error && (
+                {errorKuadrat && (
                   <div className="bg-red-50 text-red-600 text-sm font-medium p-3 rounded-xl mb-4 border border-red-200">
-                    ⚠️ {error}
+                    ⚠️ {errorKuadrat}
                   </div>
                 )}
 
@@ -207,18 +237,12 @@ const AljabarPageDetail: React.FC = () => {
                 >
                   Hitung & Visualisasikan
                 </button>
-
-                <p className="text-center text-xs text-slate-400 mt-4">
-                  Gunakan tanda minus (-) untuk nilai bernilai negatif.
-                </p>
               </div>
             </div>
           </div>
 
-          {/* Bagian Bawah: Hasil Perhitungan & Grafik Mafs */}
-          {result && (
+          {resultKuadrat && (
             <div className="space-y-10">
-              {/* Kanvas Grafik Mafs */}
               <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-2">
                   <div>
@@ -239,32 +263,163 @@ const AljabarPageDetail: React.FC = () => {
                     a={parseFloat(inputA)}
                     b={parseFloat(inputB)}
                     c={parseFloat(inputC)}
-                    result={result}
+                    result={resultKuadrat}
                   />
                 </div>
-                <p className="text-xs text-slate-400 mt-3 text-center">
-                  Tips: Klik & drag untuk menggeser sumbu koordinat. Gunakan scroll mouse untuk zoom in / zoom out.
-                </p>
               </div>
 
-              {/* 4 Cards Ringkasan */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <HasilCard label="Diskriminan (D)" value={result.diskriminan.toString()} />
-                <HasilCard label="Arah Kurva" value={result.arah} />
-                <HasilCard label="Titik Puncak" value={`(${fmt(result.titikpuncak.x)}, ${fmt(result.titikpuncak.y)})`} />
-                <HasilCard label="Potong Sumbu Y" value={`(0, ${result.TitikPotongSumbuY.y})`} />
+                <HasilCard label="Diskriminan (D)" value={resultKuadrat.diskriminan.toString()} />
+                <HasilCard label="Arah Kurva" value={resultKuadrat.arah} />
+                <HasilCard label="Titik Puncak" value={`(${fmt(resultKuadrat.titikpuncak.x)}, ${fmt(resultKuadrat.titikpuncak.y)})`} />
+                <HasilCard label="Potong Sumbu Y" value={`(0, ${resultKuadrat.TitikPotongSumbuY.y})`} />
               </div>
 
-              {/* Langkah Penyelesaian Step-by-Step */}
               <div className="bg-white rounded-3xl p-8 border border-emerald-200/60 shadow-sm relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-1.5 h-full bg-emerald-500"></div>
                 <h3 className="text-lg font-bold text-emerald-900 mb-5 flex items-center gap-2">
                   <Play className="w-5 h-5 text-emerald-600 fill-emerald-600" />
                   Langkah Penyelesaian
                 </h3>
-
                 <div className="space-y-3">
-                  {result.penyelesaian.map((langkah, index) => (
+                  {resultKuadrat.penyelesaian.map((langkah, index) => (
+                    <div
+                      key={index}
+                      className="bg-slate-50 rounded-2xl p-4 border border-slate-100 font-mono text-sm text-slate-700"
+                    >
+                      {langkah}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* ========================================================
+          2. MATERI: PERSAMAAN GARIS LURUS
+          ======================================================== */}
+      {topic.id === 'persamaan-garis-lurus' && (
+        <>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 mb-10">
+            {/* Kolom Kiri: Penjelasan Materi */}
+            <div className="lg:col-span-7 space-y-8">
+              <div className="bg-white rounded-3xl p-8 border border-slate-200/60 shadow-sm">
+                <h3 className="text-lg font-bold text-slate-900 mb-3 flex items-center gap-2">
+                  <BookOpen className="w-5 h-5 text-indigo-600" />
+                  Konsep Dasar
+                </h3>
+                <p className="text-slate-600 leading-relaxed mb-4">
+                  {topic.description}
+                </p>
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex items-center justify-between">
+                  <span className="text-sm font-semibold text-slate-700">Bentuk Umum:</span>
+                  <code className="text-base font-bold text-indigo-600 font-mono">
+                    y = mx + c
+                  </code>
+                </div>
+              </div>
+
+              <div className="bg-gradient-to-br from-indigo-50 to-blue-50 rounded-3xl p-8 border border-indigo-100">
+                <h3 className="text-lg font-bold text-indigo-900 mb-5 flex items-center gap-2">
+                  <Info className="w-5 h-5 text-indigo-600" />
+                  Unsur-Unsur Utama
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <RumusCard label="Gradien (m)" rumus="m = Δy / Δx" />
+                  <RumusCard label="Titik Potong Sumbu Y" rumus="(0, c)" />
+                  <RumusCard label="Titik Potong Sumbu X" rumus="(-c/m, 0)" />
+                  <RumusCard label="Hubungan Titik (x, y)" rumus="y = mx + c" />
+                </div>
+              </div>
+            </div>
+
+            {/* Kolom Kanan: Form Kalkulator */}
+            <div className="lg:col-span-5">
+              <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-xl shadow-slate-200/50 sticky top-24">
+                <div className="flex items-center gap-3 mb-6 pb-6 border-b border-slate-100">
+                  <div className="bg-indigo-600 p-2 rounded-lg text-white">
+                    <Calculator className="w-5 h-5" />
+                  </div>
+                  <h2 className="text-xl font-bold text-slate-900">Kalkulator {topic.name}</h2>
+                </div>
+
+                <div className="bg-slate-50 rounded-2xl p-4 mb-6 text-center border border-slate-100 font-mono text-base sm:text-lg font-bold text-slate-800">
+                  y = <span className="text-indigo-600">{inputM || 'm'}</span>({inputX !== '' ? inputX : 'x'}) +{' '}
+                  <span className="text-indigo-600">{inputConstC || 'c'}</span>
+                </div>
+
+                <div className="space-y-4 mb-6">
+                  <InputField label="Gradien (m)" value={inputM} onChange={setInputM} placeholder="Contoh: 2" />
+                  <InputField label="Titik x yang diuji" value={inputX} onChange={setInputX} placeholder="Contoh: 3" />
+                  <InputField label="Konstanta (c / intersep Y)" value={inputConstC} onChange={setInputConstC} placeholder="Contoh: 1" />
+                </div>
+
+                {errorGarisLurus && (
+                  <div className="bg-red-50 text-red-600 text-sm font-medium p-3 rounded-xl mb-4 border border-red-200">
+                    ⚠️ {errorGarisLurus}
+                  </div>
+                )}
+
+                <button
+                  onClick={handleCalculateGarisLurus}
+                  className="w-full bg-indigo-600 text-white font-bold py-4 rounded-xl hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-200 transition-all active:scale-[0.98]"
+                >
+                  Hitung & Visualisasikan
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {resultGarisLurus && (
+            <div className="space-y-10">
+              {/* Kanvas Grafik Mafs Garis Lurus */}
+              <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-2">
+                  <div>
+                    <h3 className="text-xl font-bold text-slate-900">Visualisasi Garis Lurus Interaktif</h3>
+                    <p className="text-sm text-slate-500 mt-1">
+                      Grafik memplot garis linear, titik koordinat yang dihitung, dan titik potong sumbu.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3 text-xs font-mono">
+                    <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-indigo-600"></span> Titik (x, y)</span>
+                    <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-blue-500"></span> Potong Y</span>
+                    <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Potong X</span>
+                  </div>
+                </div>
+
+                <div className="w-full rounded-2xl overflow-hidden border border-slate-100 bg-slate-900/5">
+                  <GrafikGarisLurus
+                    m={parseFloat(inputM)}
+                    x={parseFloat(inputX)}
+                    c={parseFloat(inputConstC)}
+                    result={resultGarisLurus}
+                  />
+                </div>
+              </div>
+
+              {/* 4 Cards Ringkasan */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <HasilCard label="Persamaan Garis" value={resultGarisLurus.persamaanStr} />
+                <HasilCard label={`Nilai y pada x=${inputX}`} value={resultGarisLurus.y.toString()} />
+                <HasilCard label="Potong Sumbu Y" value={`(0, ${resultGarisLurus.titikPotongY.y})`} />
+                <HasilCard 
+                  label="Potong Sumbu X" 
+                  value={resultGarisLurus.titikPotongX ? `(${fmt(resultGarisLurus.titikPotongX.x)}, 0)` : 'Tidak ada'} 
+                />
+              </div>
+
+              {/* Langkah Penyelesaian */}
+              <div className="bg-white rounded-3xl p-8 border border-emerald-200/60 shadow-sm relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-1.5 h-full bg-emerald-500"></div>
+                <h3 className="text-lg font-bold text-emerald-900 mb-5 flex items-center gap-2">
+                  <Play className="w-5 h-5 text-emerald-600 fill-emerald-600" />
+                  Langkah Penyelesaian
+                </h3>
+                <div className="space-y-3">
+                  {resultGarisLurus.penyelesaian.map((langkah, index) => (
                     <div
                       key={index}
                       className="bg-slate-50 rounded-2xl p-4 border border-slate-100 font-mono text-sm text-slate-700"
@@ -282,7 +437,9 @@ const AljabarPageDetail: React.FC = () => {
   );
 };
 
-// Komponen Visualisasi Grafik Parabola
+// ========================================================
+// KOMPONEN GRAFIK: PARABOLA
+// ========================================================
 const GrafikParabola: React.FC<{
   a: number;
   b: number;
@@ -305,14 +462,12 @@ const GrafikParabola: React.FC<{
     >
       <Coordinates.Cartesian />
 
-      {/* Kurva Parabola */}
       <Plot.OfX
         y={(x) => a * Math.pow(x, 2) + b * x + c}
         color="#6366f1"
         weight={3}
       />
 
-      {/* Titik Puncak Merah */}
       <Point x={result.titikpuncak.x} y={result.titikpuncak.y} color="#ef4444" />
       <Text
         x={result.titikpuncak.x}
@@ -323,7 +478,6 @@ const GrafikParabola: React.FC<{
         Puncak ({fmt(result.titikpuncak.x)}, {fmt(result.titikpuncak.y)})
       </Text>
 
-      {/* Titik Potong Sumbu X (Hijau) jika akar bertipe number */}
       {typeof result.TitikPotongSumbuX.x1 === 'number' && (
         <>
           <Point x={result.TitikPotongSumbuX.x1} y={0} color="#10b981" />
@@ -343,11 +497,68 @@ const GrafikParabola: React.FC<{
         </>
       )}
 
-      {/* Titik Potong Sumbu Y (Biru) */}
       <Point x={0} y={c} color="#3b82f6" />
       <Text x={0.8} y={c} size={13} color="#3b82f6">
         (0, {c})
       </Text>
+    </Mafs>
+  );
+};
+
+// ========================================================
+// KOMPONEN GRAFIK: GARIS LURUS
+// ========================================================
+const GrafikGarisLurus: React.FC<{
+  m: number;
+  x: number;
+  c: number;
+  result: HasilGarisLurus;
+}> = ({ m, x, c, result }) => {
+  const y = result.y;
+  const xCenter = x;
+  const yCenter = y;
+  const range = Math.max(8, Math.abs(xCenter) + 6, Math.abs(yCenter) + 6, Math.abs(c) + 6);
+
+  return (
+    <Mafs
+      width="auto"
+      height={600}
+      viewBox={{
+        x: [xCenter - range, xCenter + range],
+        y: [yCenter - range, yCenter + range],
+      }}
+      zoom
+    >
+      <Coordinates.Cartesian />
+
+      {/* Garis Lurus: y = mx + c */}
+      <Plot.OfX
+        y={(val) => m * val + c}
+        color="#6366f1"
+        weight={3}
+      />
+
+      {/* Titik Hasil yang Diuji (x, y) */}
+      <Point x={x} y={y} color="#4f46e5" />
+      <Text x={x} y={y + 0.8} size={13} color="#4f46e5">
+        ({fmt(x)}, {fmt(y)})
+      </Text>
+
+      {/* Titik Potong Sumbu Y (0, c) */}
+      <Point x={0} y={c} color="#3b82f6" />
+      <Text x={0.8} y={c} size={13} color="#3b82f6">
+        Potong Y (0, {c})
+      </Text>
+
+      {/* Titik Potong Sumbu X (-c/m, 0) */}
+      {result.titikPotongX && (
+        <>
+          <Point x={result.titikPotongX.x} y={0} color="#10b981" />
+          <Text x={result.titikPotongX.x} y={-0.8} size={13} color="#10b981">
+            Potong X ({fmt(result.titikPotongX.x)}, 0)
+          </Text>
+        </>
+      )}
     </Mafs>
   );
 };
@@ -392,4 +603,3 @@ const fmt = (num: number): string =>
   Number.isInteger(num) ? num.toString() : num.toFixed(2);
 
 export default AljabarPageDetail;
-

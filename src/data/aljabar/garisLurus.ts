@@ -5,6 +5,6 @@ export const garisLurusData = {
   iconName: 'TrendingUp',
   formula: 'y = mx + c',
   description: 'Persamaan linear yang membentuk garis lurus pada koordinat kartesius dengan gradien kemiringan (m) dan titik potong.',
-  isAvailable: false,
+  isAvailable: true,
 };
 
